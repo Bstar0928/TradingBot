@@ -1,2 +1,0 @@
-symbol	            markPrice	    indexPrice	        estimatedSettlePrice	
-lastFundingRate	    interestRate	nextFundingTime	    time

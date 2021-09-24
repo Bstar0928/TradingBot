@@ -1,5 +1,0 @@
-symbol	        positionAmt	        entryPrice	
-markPrice       unRealizedProfit	liquidationPrice	
-leverage	    maxNotionalValue	marginType	
-isolatedMargin	isAutoAddMargin	    positionSide	
-notional	    isolatedWallet	    updateTime

@@ -1,1 +1,0 @@
-'timezone', 'serverTime', 'futuresType', 'rateLimits', 'exchangeFilters', 'assets', 'symbols'
