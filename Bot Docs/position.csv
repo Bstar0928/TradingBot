@@ -1,0 +1,2 @@
+,symbol,positionAmt,entryPrice,markPrice,unRealizedProfit,liquidationPrice,leverage,maxNotionalValue,marginType,isolatedMargin,isAutoAddMargin,positionSide,notional,isolatedWallet,updateTime
+1,RAYUSDT,0.0,0.0,0.00000000,0.00000000,0,20,25000,cross,0.00000000,false,BOTH,0,0,0

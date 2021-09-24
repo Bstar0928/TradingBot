@@ -1,0 +1,3 @@
+symbol	            id	            orderId	        side	    price	
+qty	                realizedPnl	    marginAsset	    quoteQty	commission	
+commissionAsset	    time	        positionSide	buyer	    maker

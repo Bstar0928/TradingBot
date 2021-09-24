@@ -1,0 +1,6 @@
+'feeTier',                  'canTrade',                     'canDeposit',
+'canWithdraw',              'updateTime',                   'totalInitialMargin', 
+'totalMaintMargin',         'totalWalletBalance',           'totalUnrealizedProfit', 
+'totalMarginBalance',       'totalPositionInitialMargin',   'totalOpenOrderInitialMargin', 
+'totalCrossWalletBalance',  'totalCrossUnPnl',              'availableBalance', 
+'maxWithdrawAmount',        'assets',                       'positions'

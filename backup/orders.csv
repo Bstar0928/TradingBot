@@ -1,0 +1,3 @@
+,orderId,symbol,status,clientOrderId,price,avgPrice,origQty,executedQty,cumQty,cumQuote,timeInForce,type,reduceOnly,closePosition,side,positionSide,stopPrice,workingType,priceProtect,origType,updateTime
+0,16770598802,XRPUSDT,NEW,o5oGQVHHqI23JjZ8S97dAN,0,0.0,7.9,0,0,0,GTC,MARKET,False,False,SELL,BOTH,0,CONTRACT_PRICE,False,MARKET,1630487806413
+1,16528748708,ADAUSDT,NEW,dwdP3vmYF0HAs3shRkxTxH,0,0.00000,10,0,0,0,GTC,MARKET,False,False,BUY,BOTH,0,CONTRACT_PRICE,False,MARKET,1631027849922
