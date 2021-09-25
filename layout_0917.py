@@ -1,5 +1,4 @@
 
-from typing import Text
 import PySimpleGUI as sg
 import json
 import pandas as pd
@@ -10,9 +9,9 @@ class GUI_object():
     # Initialize the GUI object
     def __init__(self, _client, _conf_filename = "conf.json", _order_filename = "orders.csv", _trades_history_filename = "trades_history.csv"):
         self.client = _client                                                   # Get the current client instance
-        self.table = None
+
         # Initialize the variable
-        self.currencies = ['ETHUSDT', 'BNBUSDT', 'ADAUSDT', 'XRPUSDT', 'DOGEUSDT', 'DOTUSDT', 'UNIUSDT',]
+        self.currencies = ['ETHUSDT', 'BNBUSDT', 'ADAUSDT', 'XRPUSDT', 'DOGEUSDT', 'DOTUSDT', 'UNIUSDT']
         self.RADIO2= ["amount_value", "percentage_value", "price_value"]
         
         # Load needed files
@@ -73,24 +72,22 @@ class GUI_object():
         data_headings = ['Symbol', 'Side', 'Amount', 'Entry Price', "Fee", "Mark Price","Exit Fee", "PNL", "Trade", "orderId"]
         visible_column_map = [True, True, True, True, True, True, True, True, True, False]
         menu_def = [['&File', ['&API Settings',"&Exit and Save"]]]
-        # menu_def = [['&File', ["&Exit and Save"]]]
 
         layout = [
             [sg.Menu(menu_def)],
             [
+                sg.pin(sg.Frame("API settings",
+                    [
+                        [sg.Text("API key", size=(10,1)),sg.Input(size=(70,1), key="apikey")],
+                        [sg.Text("API Secret", size=(10,1)),sg.Input(size=(70,1), key="apisecret")],
+                        [sg.Checkbox("Testnet", key="testnet")],
+                        [sg.Button("Save keys",key="-saveapi-"), sg.Button("Hide Frame", key="-hideapi-")]
+                    ],visible=False, key="apiframe"
+                    ), shrink=True
+                )
+            ],
+            [
                 sg.Column([
-                    # [
-                    #     sg.pin(sg.Frame("Introduction",
-                    #         [
-                    #             [
-                    #                 sg.Text("Description : ", size=(54,3)),
-                    #             ],
-                                
-                    #         ],
-                    #         key="apiframe", font = ("Arial", 14, "bold")), shrink=True
-                    #     )
-                    # ],
-                    [sg.Text("")],
                     [
                         sg.Text("BALANCE:", size =(14, 1)), 
                         sg.Text("", key="balance", size=(10, 1)), 
@@ -107,59 +104,46 @@ class GUI_object():
                         sg.Text("Unrealized PNL:", size =(14, 1)), 
                         sg.Text("", key="PNL", size=(10, 1))
                     ], 
-                    [sg.Text("")],
-                    [
-                        sg.Text("Symbol"),
-                        sg.In(default_text=self.conf_dict["symbol"][:-4], size=(6, 1), key="symbol"), 
-                        sg.Text("  "),
-                        sg.Button("Change", key="-symbol-", size =(8, 1)),
-                        sg.Text("         "),
-                        sg.Checkbox('Symbol Lock', default=False, key="symbol_lock"), 
-                        
-                    ],
-                    [
-                        sg.Text("Reduce-only"), 
-                        sg.Checkbox("", default=self.conf_dict["reduce"], key="reduce"), 
-                        sg.Text("   Leverage"), 
-                        sg.Spin(values=[i for i in range(1, 126)], key="leverage", initial_value=self.conf_dict["leverage"], size=(5, 1)),
-                        sg.Text("   Callback"), 
-                        sg.Spin(values=[i/10 for i in range(1,51)], key="percentage_tls",initial_value=self.conf_dict["callback_rate"], size=(5, 1)),
-                    ],
-                    [
-                        sg.Radio('Crossed', 'margin', default=(not self.conf_dict["Isolated"]), key="Crossed"),
-                        sg.Text(" "*8),
-                        sg.Radio('Isolated', 'margin', key="Isolated")
-                    ], 
                     
                     [
-                        sg.Radio('Market', "RADIO1", default=self.conf_dict["radio_market"], key="radio_market"),
-                        sg.Text(" "*10),
-                        sg.Checkbox('Market Lock', default=False, key="market_lock", enable_events=True)
+                        sg.Text("Symbol"),
+                        sg.In(default_text=self.conf_dict["symbol"][:-4], size=(11, 1), key="symbol"), 
+                        sg.Checkbox('Symbol Lock', default=False, key="symbol_lock"), 
+                        sg.Button("Change", key="-symbol-", size =(7, 1))
+                    ],
+                   
+                    [
+                        sg.Text("Reduce-only"), sg.Checkbox("", default=self.conf_dict["reduce"], key="reduce"), 
+                        sg.Text("Leverage"), sg.Spin(values=[i for i in range(1, 126)], key="leverage", initial_value=self.conf_dict["leverage"], size=(5, 1)),
+                        sg.Text("Callback"), sg.Spin(values=[i/10 for i in range(1,51)], key="percentage_tls",initial_value=self.conf_dict["callback_rate"], size=(5, 1)),
+                    ],      
+                    
+                    [
+                        sg.Radio('Crossed', 'margin', default=(not self.conf_dict["Isolated"]), key="Crossed"),
+                        sg.Radio('Isolated', 'margin', key="Isolated"),
                     ],
                     [
-                        sg.Radio('Stop Market', "RADIO1",key="radio_stop_market"), 
-                        sg.Text(" "*2),
-                        sg.Radio('Trailing Stop Loss', "RADIO1",key="radio_tls")
+                        sg.Radio('Market', "RADIO1", default=self.conf_dict["radio_stop_market"], key="radio_market"), 
+                        sg.Checkbox(' Market Lock', default=False, key="market_lock", enable_events=True)
                     ],
-                    # [sg.Text("")], 
                     [
-                        
-                        sg.Radio('Amount  ', "RADIO2", default=True, key="amount_value"), 
-                        sg.Text(" "*7),
-                        sg.Radio('Exact Price', "RADIO2", key="price_value"), 
-                        sg.Text(" "*5),
-                        sg.In(key="qnty7", default_text=self.conf_dict["qnty7"] if "qnty7" in self.conf_dict else 0, size=(6, 1)),
+                        sg.Radio('Stop Market', "RADIO1",key="radio_stop_market", default=self.conf_dict["radio_stop_market"], size=(10,1)), 
+                        #sg.Radio('Take Profit', "RADIO1", key="radio_take_profit", default=self.conf_dict["radio_take_profit"], size=(10, 1)),
+                        sg.Radio('Trailing Stop Loss', "RADIO1",key="radio_tls", default=self.conf_dict["radio_tls"]),
+                    ],   
+                    [
+                        sg.Radio('Amount ', "RADIO2", default=True, key="amount_value"), 
+                        sg.Radio('Exact Price ', "RADIO2", key="price_value"), 
+                        sg.In(key="qnty7", default_text=self.conf_dict["qnty7"] if "qnty7" in self.conf_dict else 0, size=(8, 1)),
                         sg.Button('Above', size=(8, 1)),
                     ],
                     [
                         sg.Radio('Percentage ', "RADIO2", key="percentage_value"),
-                        sg.Text(" "*4),
                         sg.Spin(values=[i/10 for i in range(1,51)], key="callback_rate",initial_value=self.conf_dict["callback_rate"], size=(5, 1)),
+                    ],
+                    [
                         sg.Button('Long', size=(8, 1)), 
                     ],
-                    # [
-                    #     sg.Button('Long', size=(8, 1)), 
-                    # ],
                     [
                         sg.Text("Single order mode"),
                     ],
@@ -203,75 +187,47 @@ class GUI_object():
                         sg.Button("Clear", key="-clearmulti-", size=(7, 1)), 
                     ],
                     
-                ], expand_y = True),
+                ]),
                     
                 sg.Column([
-                        # [
-                        #     sg.pin(sg.Frame("API settings",
-                        #         [
-                        #             [
-                        #                 sg.Text("API key", size=(11,1)),
-                        #                 sg.Input(size=(73,1), key="apikey1"),
-                        #                 # sg.Text("", size = (2, 1)),
-                        #                 sg.Checkbox("Testnet", key="testnet1")
-                        #             ],
-                        #             [
-                        #                 sg.Text("API Secret", size=(11,1)),
-                        #                 sg.Input(size=(73,1), key="apisecret1"),
-                        #                 # sg.Text("", size = (2, 1)),
-                        #                 sg.Button("Save keys",key="-saveapi1-", size = (11, 1))
-                        #             ],
-                        #         ],
-                        #         key="apiframe1",
-                        #         ), shrink=True,
-                        #     )
-                        # ],
-                        [sg.Text("")],
-                        [sg.Button(c[:-4], key="-"+c+"-", size=(11, 1)) for c in self.currencies],
+                       [sg.Button(c[:-4], size=(11, 1)) for c in self.currencies],
                         [sg.Button(key=d, size=(11 ,1), button_text="- . -- %") for d in self.currencies],
-                        [sg.Button(key=c, size=(11 ,1), enable_events=False) for c in self.currencies],
-                        [
-                            sg.Text("Rate of change "), 
+                        [sg.Button(key=c, size=(11 ,1), enable_events=False) for c in self.currencies],                             
+                        [ 
+                            sg.Text("Rate of change"), 
                             sg.In(key="rate", default_text=self.conf_dict["rate"], size=(3,1)), 
-                            sg.Radio("Sec","radio_rate", key="sec_rate", default=True),
+                            sg.Radio("Sec","radio_rate", key="sec_rate", default=self.conf_dict["sec_rate"]),
                             sg.Radio("Min","radio_rate", key="min_rate"), 
-                            # sg.Text("       "), 
-                            sg.Button("Reset", size=(8, 1), key="-applyrate-"), 
+                            sg.Button("Apply", size=(8, 1), key="-applyrate-"), 
                             sg.Text("Counter:"), 
-                            sg.Text(text =300, key="counterdown", size=(3,1)), 
-                            sg.Checkbox("Convert USDT", default=True, key="toggle_USDT"),
-                            sg.Checkbox("Reverse Lock", size=(10, 1), key="reverse_lock", enable_events=True),
+                            sg.Text(text =0.05, key="counterdown", size=(4,1)), 
+                            sg.Checkbox("Reverse Lock", size=(10, 1), key="-reverse-", enable_events=True),
                         ],
-                        [sg.Text("")],
+                        [sg.Text("")], 
                         [
-                            sg.Checkbox("Enable Tracker", key="tracker_on", default=True),
                             sg.Radio("Live Positions","radio_tracker", key="radio_live", default=True),
                             sg.Radio("Long History","radio_tracker", key="radio_long"),
                             sg.Radio("Short History", "radio_tracker", key="radio_short"),
                         ],
+                     
                         [
                             sg.Text("Profit"), 
-                            sg.Text("", key="long_total", size=(9,1), font="Arial, 11"), 
+                            sg.Text("", key="long_total", size=(9,1)), 
                             sg.Button("Close", size=(7, 1), key="-close_long-"), 
-                            sg.Text("    "),
                             sg.Text("Losses"), 
-                            sg.Text("", key="short_total", size=(9,1), font="Arial, 11"), 
+                            sg.Text("", key="short_total", size=(9,1)), 
                             sg.Button("Close", size=(7, 1), key="-close_short-"), 
-                            sg.Text("    "),
-                            sg.Text("Total"),
-                            sg.Text("", key="total_pnl", size=(9, 1), font="Arial, 11"), 
-                            sg.Button("Close", size=(7, 1), key="-close_total-"), 
+                            sg.Text("Total"), 
+                            sg.Text("", size=(9,1)), 
+                            sg.Button("Close", size=(7, 1), key="-close_short-"), 
                         ],
-                        # [
-                        #     sg.Checkbox("Show", default=True, key="-"+str(i)+"_sh-", size=(7, 1)) for i in range(len(data_headings)-2)
-                        # ],
                         [sg.Table(values=data_values, headings=data_headings,
                                         max_col_width=55,
                                         auto_size_columns=False,                       
                                         select_mode=sg.TABLE_SELECT_MODE_BROWSE,
-                                        justification='center',
+                                        justification='left',
                                         enable_events=True,
-                                        col_widths=[9,8,8,8,9,9,9,],
+                                        col_widths=[9,9,9,9,9,9,9],
                                         visible_column_map=visible_column_map,
                                         num_rows=13, key='_tracker_',
                                         row_height=28,
@@ -282,7 +238,8 @@ class GUI_object():
                             sg.Button("Active", key="-active-", size=(7, 1)), 
                             sg.Checkbox('Auto-scroll to End', default=True, key="autoscroll")
                         ], 
-                ], expand_y = True)
+                ])
+
             ] # rows
         ] # layout
         return layout
@@ -294,16 +251,9 @@ class GUI_object():
         sg.theme_element_background_color("#323233")        
         sg.theme_text_element_background_color("#323233")
         sg.theme_text_color("#d6d6d6")
-        
-        window = sg.Window( 
-            'Main Window',                                                                      # Initilalize the main window
-            self.get_layout(), 
-            finalize=True, 
-            font="Helvetica, 10",
-            )   
-            # keep_on_top=True)   
-        self.table = window['_tracker_']                                                        # Define window table
-        self.table.bind('<Button-1>', "Click")                                                  # and apply button property
+        window = sg.Window('Main Window', self.get_layout(), finalize=True, font="Helvetica, 10")   # Initilalize the main window
+        table = window['_tracker_']                                                             # Define window table
+        table.bind('<Button-1>', "Click")                                                       # and apply button property
         table_widget = window['_tracker_'].Widget
         anchors = ["center", "center", "center", "center", "center", "e", "e", "e", "center"]
         for cid, anchor in enumerate(anchors):

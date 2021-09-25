@@ -1,5 +1,5 @@
 import pandas as pd
-
+from win10toast import ToastNotifier
 ###########     CSV test     #############
 """
 update_df = pd.read_csv("training.csv")
@@ -18,15 +18,17 @@ update_df[item] = ""
 print(update_df)
 """
 
-###########     CSV test     #############
-dp = 5
-# for k in sorted(dps.keys()):
-#     if float(symbol_price["markPrice"])> k:
-#         dp = dps[k]
-dps = {0.01: 4, 1: 3, 100: 2}
-price = 0.2
-dp = int(str([dps[k] for k in sorted(dps.keys()) if float(price) > k]))
-print(dp, type(dp))
+###########     coding test     #############
+
+import PySimpleGUI as sg
+
+event, values = sg.Window('Window Title').Layout([[sg.Input(key='_FILES_'), sg.FilesBrowse()], [sg.OK(), sg.Cancel()]]).Read()
+
+print(values['_FILES_'].split(';'))
+
+
+
+
 
 # for i,d in enumerate(table_column_state):
 #     if not d:

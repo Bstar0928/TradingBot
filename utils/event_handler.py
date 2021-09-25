@@ -1,3 +1,54 @@
+import time
+import PySimpleGUI as sg
+from PySimpleGUI.PySimpleGUI import No, Window
+import json
+from binance import Client
+
+# #####################################
+#   API setting window
+def api_setting(obj):
+    layout2 = [                                                                                     # Define new layout2
+        [
+            sg.pin(
+                sg.Frame("API settings", [
+                    [
+                        sg.Text("API key", size=(10, 1)),                                           # API key input panel
+                        sg.Input(size=(70, 1), key="apikey")
+                    ],
+                    [
+                        sg.Text("API Secret", size=(10, 1)),                                        # API secret panel
+                        sg.Input(size=(70, 1), key="apisecret")
+                    ],
+                    [
+                        sg.Checkbox("Testnet", key="testnet")                                       # Testnet setting
+                    ],
+                    [
+                        sg.Button("Save keys", key="-saveapi-"),                                    # Save key button
+                        sg.Button("Close", key="-hideapi-")                                         # Close botton
+                    ]
+                ], 
+                key="apiframe",), shrink=True
+            )
+        ],
+    ]
+
+    sg.theme_background_color("#555555")
+    api_window = sg.Window(title="API Setting", layout=layout2, modal=True)
+    while True:
+        event, values = api_window.read()
+        if event == "Exit" or event == sg.WIN_CLOSED or event == "-hideapi-":
+            api_window.close()
+            break  
+        if event == "-saveapi-":
+            if len(values["apikey"]) == 0 or len(values["apisecret"]) == 0:
+                print("Warning!, Please input correctly.")
+            else:
+                key_settings = {"APIKey": values["apikey"], "APISecret": values["apisecret"], "testnet": values["testnet"]} # Read key setting
+                json.dump(key_settings, open("utils/keys.conf", "wt"))                                                      # Write current setting
+                # obj.client = Client(key_settings["APIKey"], key_settings["APISecret"], testnet=key_settings["testnet"])    # Initialize new object
+                print(json.dumps(key_settings, indent=2))
+
+
 
 
 # #####################################

@@ -90,15 +90,17 @@ RADIO2 = ["amount_value", "percentage_value", "price_value"]
 
 layout = [
     [sg.Menu(menu_def)],
-    [sg.pin(sg.Frame("API settings", [
-        [sg.Text("API key", size=(10, 1)), sg.Input(size=(70, 1), key="apikey")],
-        [sg.Text("API Secret", size=(10, 1)), sg.Input(size=(70, 1), key="apisecret")],
-        [sg.Checkbox("Testnet", key="testnet")],
-        [sg.Button("Save keys", key="-saveapi-"), sg.Button("Hide Frame", key="-hideapi-")]
-    ], visible=False, key="apiframe"
-                     ), shrink=True
+    [
+        sg.pin(
+            sg.Frame("API settings", [
+                [sg.Text("API key", size=(10, 1)), sg.Input(size=(70, 1), key="apikey")],
+                [sg.Text("API Secret", size=(10, 1)), sg.Input(size=(70, 1), key="apisecret")],
+                [sg.Checkbox("Testnet", key="testnet")],
+                [sg.Button("Save keys", key="-saveapi-"), sg.Button("Hide Frame", key="-hideapi-")]
+                ], 
+                visible=False, key="apiframe"), shrink=True
             )
-     ],
+    ],
     [sg.Column([
         [sg.Text("BALANCE:"), sg.Text("", key="balance", size=(15, 1))],
         [sg.Text("Margin Balance:"), sg.Text("", key="margin", size=(15, 1))],
