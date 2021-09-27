@@ -7,8 +7,8 @@ import sys
 import time
 import pandas as pd
 
-api_key="4qwMmtjwUaA85tiIAGl8ypfnxd4IKp89sOUO9Chpmkf8AwIc0ONgou6QoQISPtrH"
-api_secret="9oFz2ym2f2B3KecOlcmhTaZMWWk9O3qTCZgRHtJiqgpisdEK5UyfV5H1B5AV3inM" 
+api_key="ZLg9aIszcqyoQOU0PLIbogbV2Xkap9mFaPgLnMNFMaGZ35U2EMYXZ10svTwIM4e9"
+api_secret="dAFbAFCbjT3REVg0Yr4abKbN1c3MVWisJxX3uvkzrC4d5OJUAGwfrBFIMeaOE5Yl" 
 
 client = Client(api_key, api_secret)
 

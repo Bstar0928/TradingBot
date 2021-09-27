@@ -198,7 +198,7 @@ class GUI_object():
                         sg.Button('Short',key='-short5-', size=(8, 1)),
                         sg.Button('Cancel',key='-cancel5-', size=(8, 1)), 
                     ],
-                    [sg.Multiline(size=(60, 5), key="multi", reroute_stdout = True,autoscroll=True ,reroute_stderr = False)],
+                    # [sg.Multiline(size=(60, 5), key="multi", reroute_stdout = True,autoscroll=True ,reroute_stderr = False)],
                     [
                         sg.Button("Clear", key="-clearmulti-", size=(7, 1)), 
                     ],

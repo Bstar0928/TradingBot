@@ -363,30 +363,6 @@ def Process(_obj):
             updating = f'{float(values[event]["liquidationPrice"]):.3f}'                                                # Get the liquidationPrice vale
             window["liquidationPrice"].update(updating)                                                                 # Update GUI liquidationPrice
 
-            # #########################################
-            # Update "Long Total" and "Short total" content
-            if all([v in values[event] for v in ["long_total", "short_total"]]):
-                updating = f' {float(values[event]["long_total"]):.3f}' \
-                    if not pd.isna(values[event]["long_total"]) else "/"                                                # Get the long total vale
-                window["long_total"].update(updating)                                                                   # Update the content of long text box
-                long_color = ("green" if float(updating)>0 else "#ff2222") if updating != "/" else "#f7983c"            # Set each color
-                window["long_total"].update(text_color=long_color, background_color ="#222222")                         # Apply color setting
-
-                updating = f'{float(values[event]["short_total"]):.3f}' \
-                    if not pd.isna(values[event]["short_total"]) else "/"                                               # If the value of short total is not Nan
-                                                                                                                        # Set it's value
-                window["short_total"].update(updating)                                                                  # Update it's content
-                short_color = ("green" if float(updating) >= 0 else "#ff2222") if updating != "/" else "#f7983c"        # Get color setting
-                window["short_total"].update(text_color=short_color, background_color ="#222222")                       # Update text box into current color
-            
-            # ##########################################
-            # If there is no exists, filling with "/"
-            else:
-                window["long_total"].update("/")                                                                        # Update long_total box into "/"
-                window["long_total"].update(background_color ="#222222",text_color="#f7983c")                           # Set color 
-                window["short_total"].update("/")                                                                       # Update short_total box into "/"
-                window["short_total"].update(background_color="#222222",text_color="#f7983c")                           # Set color
-
             # ##########################################
             # If the "table" event occurs,
             # Paint table with Green & blue colour 
@@ -395,67 +371,78 @@ def Process(_obj):
                 # ######################################
                 # Make a logic for req 5
                 if len(update_df) > 0:
-                    if not values["radio_live"]:
-                        pass
-                    else:
+                    # #########################################
+                    # Update "Long Total" and "Short total" content
+                    pro_val = round(float(update_df['PNL'][0]), 6)
+                    los_val = round(float(update_df['PNL'][1]), 6)
+                    window["long_total"].update(pro_val)                         # Apply color setting
+                    window["short_total"].update(los_val)                         # Apply color setting
+                    pro_color = ("green" if float(pro_val)>0 else "#ff2222") if pro_val != "/" else "#f7983c"           # Set each color
+                    los_color = ("green" if float(los_val)>0 else "#ff2222") if los_val != "/" else "#f7983c"           # Set each color
+                    window["long_total"].update(text_color=pro_color, background_color ="#222222")                      # Apply color setting
+                    window["short_total"].update(text_color=los_color, background_color ="#222222")                     # Apply color setting
+
+                    
+                    pnl_val = pro_val + los_val
+                    window['total_pnl'].update(pnl_val)
+                    pnl_color = ("green" if float(pnl_val) > 0 else "#ff2222") if pnl_val != 0.0 else "#f7983c"         # Get color setting
+                    window["total_pnl"].update(background_color ="#222222", text_color=pnl_color)                       # Set color
+
+                    if len(update_df['side']) > 2:                                     # If the value of qty is different
                         try:
-                            pnl_val = round(float(update_df['PNL'][0]), 6)
-                            window['total_pnl'].update(pnl_val)
-                            pnl_color = ("green" if float(pnl_val) > 0 else "#ff2222") if pnl_val != 0.0 else "#f7983c"         # Get color setting
-                            window["total_pnl"].update(background_color ="#222222", text_color=pnl_color)                       # Set color
+                            new_currency = _obj.conf_dict["symbol"]                                                     # Get the currency value
+                            position_info = _obj.client.futures_position_information()                                  # Get the current position info
+                            symbol_position = float(                                                                    # find position info
+                                next(p["positionAmt"] for p in position_info if p["symbol"] == _obj.conf_dict["symbol"])                    
+                            )
+                            params = {}                                                                                 # Initialize the parameter
+                            params["side"] = "BUY"  if symbol_position<0 else "SELL"
+                            params["quantity"] = round(abs(symbol_position), 3)
+                            params["symbol"] = _obj.conf_dict["symbol"]
+                            params["type"] = "MARKET"
+                            _obj.df.drop(_obj.df.index, inplace=True)                                                   # Remove duplicated parts
+                            if params["quantity"] != 0:         
+                                order = _obj.client.futures_create_order(**params)                                      # we make the opposite trade
+                                while True:         
+                                    try:                                                                                # Get the current order info
+                                        order_info = _obj.client.futures_get_order(symbol=params["symbol"], orderId=order["orderId"])       
+                                        if order_info["status"] == "FILLED":                                            # we iterate throught the loop until the status is FILLED, meaning the trade was executed.
+                                            break
+                                    except BinanceAPIException as e:                                                    # If there is exception, 
+                                        print("Binance in _balance_ 1 : ", e.message)                                                   # Print error message
+                                    time.sleep(0.1)
+                                trades = _obj.client.futures_account_trades()                                           # Get the account trade
+                                trades_df = pd.DataFrame.from_dict(trades)                                              # Convert to dataFrame
+                                trades_df = trades_df.astype({"commission": float, "quoteQty": float})                  # Convert into float value    
+                                commission, val = trades_df.loc[                                                        # Calculate sum of order list
+                                    trades_df["orderId"].eq(order_info["orderId"]) ,["commission", "quoteQty"]                              
+                                ].sum()
+                                usdt_amount = abs(val) - commission                                                     # Calculate amount 
+                                new_price = float(next(p["markPrice"] for p in prices if p["symbol"] == new_currency))  # Get the new price
+                                params["side"] = "SELL" if values["reverse_lock"] else "BUY" if params["side"] =="BUY" else "SELL" # make parameter
+                                params["side"] = params["side"] if values["reverse_lock"] else "BUY" if params["side"] =="SELL" else "SELL" # make parameter
+                                params["quantity"] = round((usdt_amount/new_price), currency_precision[new_currency])
+                                params["symbol"] = new_currency
+                                order = _obj.client.futures_create_order(**params)                                      # Make order
+                                order_df = pd.DataFrame.from_dict({k: [v] for k, v in order.items()})                   # Convert to dataframe
+                                _obj.df = _obj.df.append(order_df, ignore_index=True)                                   # Append it to the original df
 
-                            if not (update_df['side'].eq(update_df['side'].iloc[0]).all()):                                     # If the value of qty is different
-                                try:
-                                    new_currency = _obj.conf_dict["symbol"]                                                     # Get the currency value
-                                    position_info = _obj.client.futures_position_information()                                  # Get the current position info
-                                    symbol_position = float(                                                                    # find position info
-                                        next(p["positionAmt"] for p in position_info if p["symbol"] == _obj.conf_dict["symbol"])                    
-                                    )
-                                    params = {}                                                                                 # Initialize the parameter
-                                    params["side"] = "BUY"  if symbol_position<0 else "SELL"
-                                    params["quantity"] = round(abs(symbol_position), 3)
-                                    params["symbol"] = _obj.conf_dict["symbol"]
-                                    params["type"] = "MARKET"
-                                    _obj.df.drop(_obj.df.index, inplace=True)                                                   # Remove duplicated parts
-                                    if params["quantity"] != 0:         
-                                        order = _obj.client.futures_create_order(**params)                                      # we make the opposite trade
-                                        while True:         
-                                            try:                                                                                # Get the current order info
-                                                order_info = _obj.client.futures_get_order(symbol=params["symbol"], orderId=order["orderId"])       
-                                                if order_info["status"] == "FILLED":                                            # we iterate throught the loop until the status is FILLED, meaning the trade was executed.
-                                                    break
-                                            except BinanceAPIException as e:                                                    # If there is exception, 
-                                                print("Binance in _balance_ 1 : ", e.message)                                                   # Print error message
-                                            time.sleep(0.1)
-                                        trades = _obj.client.futures_account_trades()                                           # Get the account trade
-                                        trades_df = pd.DataFrame.from_dict(trades)                                              # Convert to dataFrame
-                                        trades_df = trades_df.astype({"commission": float, "quoteQty": float})                  # Convert into float value    
-                                        commission, val = trades_df.loc[                                                        # Calculate sum of order list
-                                            trades_df["orderId"].eq(order_info["orderId"]) ,["commission", "quoteQty"]                              
-                                        ].sum()
-                                        usdt_amount = abs(val) - commission                                                     # Calculate amount 
-                                        new_price = float(next(p["markPrice"] for p in prices if p["symbol"] == new_currency))  # Get the new price
-                                        params["side"] = "SELL" if params["side"] =="BUY" else "BUY"
-                                        params["quantity"] = round((usdt_amount/new_price), currency_precision[new_currency])
-                                        params["symbol"] = new_currency
-                                        order = _obj.client.futures_create_order(**params)                                      # Make order
-                                        order_df = pd.DataFrame.from_dict({k: [v] for k, v in order.items()})                   # Convert to dataframe
-                                        _obj.df = _obj.df.append(order_df, ignore_index=True)                                   # Append it to the original df
-
-                                except Exception as e:
-                                    print("Error in _balance_ 2:", e)
-                                else:
-                                    update_df = update_df.iloc[0:0]
                         except Exception as e:
-                            pass
+                            print("Error in _balance_ 2:", e)
+                        else:
+                            update_df = update_df.iloc[0:0]
                 else:
+                    window["long_total"].update(0.00)                                                                   # Apply color setting
+                    window["short_total"].update(0.00)                                                                  # Apply color setting
                     window['total_pnl'].update(0.00)
-                    window["total_pnl"].update(background_color ="#222222", text_color="#f7983c")                       # Set color
+                    window["long_total"].update(text_color="#f7983c", background_color ="#222222")                      # Apply color setting
+                    window["short_total"].update(text_color="#f7983c", background_color ="#222222")                     # Apply color setting
+                    window["total_pnl"].update(text_color="#f7983c", background_color ="#222222")                       # Set color
 
                 update_df_list = update_df.columns.tolist()                                                             # Get the current column list
                 item = [update_df_list[i] for i, d in enumerate(table_column_state) if not d]                           # Choose selected index
                 update_df[item] = ""                                                                                    # Remove it's contents
-                window["_tracker_"].update(values=update_df.values.tolist()[1:])                                            # define colors based on sell
+                window["_tracker_"].update(values=update_df.values.tolist()[1:])                                        # define colors based on sell
             else:           
                 window['total_pnl'].update(0.00)            
                 window["total_pnl"].update(background_color ="#222222", text_color="#f7983c")                           # Set color
@@ -705,7 +692,7 @@ def Process(_obj):
                         print("Binance in _long_ order 2: ", e.message)
                 
             except Exception as e:
-                print("Binance in _long_ 3: ", e.message)
+                print("Binance in _long_ 3: ", e)
             else:
                 _obj.df.to_csv("utils/orders.csv")                                                                              # Save current dataFrame 
                 json.dump(values, open("utils/conf.json", "wt"))                                                                # Open the conf.json file
@@ -832,7 +819,7 @@ def Process(_obj):
             except Exception as e:
                 print("Error in _closetotal_ :", e)                                                                                 # If there is an exception, print message
             else:
-                _obj.df.to_csv("orders.csv")
+                _obj.df.to_csv("utils/orders.csv")
                 print("Successfully closed!")
                 # sg.Popup(title='Successfully closed.', keep_on_top=True)
 
